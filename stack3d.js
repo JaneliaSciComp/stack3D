@@ -1,9 +1,8 @@
-
 var StackViewer = function(parameters) {
     /**
      * Initialize Defaults
      */
-     var defaults = {
+    var defaults = {
         substacks: [],
         color: {},
         canvasDimenstions: [1000, 1000],
@@ -14,7 +13,7 @@ var StackViewer = function(parameters) {
         rotate: true,
     };
 
-    var conf = $.extend({},parameters);
+    var conf = $.extend({}, parameters);
     var cfg = $.extend(true, {}, defaults, conf);
     var self = this;
 
@@ -22,49 +21,48 @@ var StackViewer = function(parameters) {
         //Setup Variables
         var roi, ratio, light, lx, ly, lz, stackMaxDimension;
 
-        if (!cfg.stackDimensions){
+        if (!cfg.stackDimensions) {
             cfg.stackDimensions = [0, 0, 0];
             var ssx, ssy, ssz;
-            cfg.substacks.forEach( function(ss){
+            cfg.substacks.forEach(function(ss) {
                 ssx = ss.x + ss.width;
                 ssy = ss.z + ss.height;
                 ssz = ss.y + ss.length;
-                if (ssx > cfg.stackDimensions[0]) cfg.stackDimensions[0] = ssx; 
-                if (ssy > cfg.stackDimensions[1]) cfg.stackDimensions[1] = ssy; 
-                if (ssz > cfg.stackDimensions[2]) cfg.stackDimensions[2] = ssz; 
-            })
+                if (ssx > cfg.stackDimensions[0]) cfg.stackDimensions[0] = ssx;
+                if (ssy > cfg.stackDimensions[1]) cfg.stackDimensions[1] = ssy;
+                if (ssz > cfg.stackDimensions[2]) cfg.stackDimensions[2] = ssz;
+            });
         }
         stackMaxDimension = Math.max(cfg.stackDimensions[0], cfg.stackDimensions[1], cfg.stackDimensions[2]);
-        
+
         this.objects = [];
         this.intersects = [];
         this.mouse = new THREE.Vector2();
         this.should_rotate = cfg.rotate;
-        
+
 
         //Objects
         roi = new THREE.Object3D();
-        cfg.substacks.forEach( function(ss) {
+        cfg.substacks.forEach(function(ss) {
             var geometry, mesh, material, user_id, color;
             geometry = new THREE.BoxGeometry(ss.width, ss.height, ss.length);
             if (ss.status.constructor === Array) {
-                geometry.faces.forEach( function(face, idx) { 
-                    user_id = ss.status[ idx % ss.status.length];
-                    color = colors[user_id].color;
+                geometry.faces.forEach(function(face, idx) {
+                    user_id = ss.status[idx % ss.status.length];
+                    color = cfg.colors[user_id].color;
                     face.color.set(color);
                     material = new THREE.MeshLambertMaterial({
-                     ambient: 0x808080,
-                     vertexColors: THREE.FaceColors,
-                     transparent: true,
-                 });
+                        ambient: 0x808080,
+                        vertexColors: THREE.FaceColors,
+                        transparent: true,
+                    });
                 });
-            }
-            else {
+            } else {
                 material = new THREE.MeshLambertMaterial({
-                 ambient: 0x808080,
-                 color: cfg.colors[ss.status].color,
-                 transparent: true,
-             });
+                    ambient: 0x808080,
+                    color: cfg.colors[ss.status].color,
+                    transparent: true,
+                });
             }
             mesh = new THREE.Mesh(geometry, material);
             mesh.position.x = ss.x;
@@ -76,9 +74,9 @@ var StackViewer = function(parameters) {
             self.objects.push(mesh);
 
         });
-        roi.position.x = -(stackMaxDimension/2);
-        roi.position.y = -(stackMaxDimension/2);
-        roi.position.z = -(stackMaxDimension/2);
+        roi.position.x = -(stackMaxDimension / 2);
+        roi.position.y = -(stackMaxDimension / 2);
+        roi.position.z = -(stackMaxDimension / 2);
         this.roi_rot = new THREE.Object3D();
         this.roi_rot.add(roi);
 
@@ -95,23 +93,23 @@ var StackViewer = function(parameters) {
         this.scene.add(this.roi_rot);
 
         //Lights
-        light = new THREE.DirectionalLight( 0xffffff, 0.8);
-        lx = stackMaxDimension * Math.sin(Math.PI/8);
-        lz = stackMaxDimension * Math.cos(Math.PI/8);
+        light = new THREE.DirectionalLight(0xffffff, 0.8);
+        lx = stackMaxDimension * Math.sin(Math.PI / 8);
+        lz = stackMaxDimension * Math.cos(Math.PI / 8);
         ly = stackMaxDimension * 0.5;
         light.position.set(lx, ly, lz);
-        this.scene.add( light );
-        lx = stackMaxDimension * Math.sin(9 * Math.PI/8);
-        lz = stackMaxDimension * Math.cos(9 * Math.PI/8);
+        this.scene.add(light);
+        lx = stackMaxDimension * Math.sin(9 * Math.PI / 8);
+        lz = stackMaxDimension * Math.cos(9 * Math.PI / 8);
         ly = -ly;
-        light = new THREE.DirectionalLight( 0xffffff, 0.8);
+        light = new THREE.DirectionalLight(0xffffff, 0.8);
         light.position.set(lx, ly, lz);
-        this.scene.add( light );
-        light = new THREE.AmbientLight( 0x404040 ); // soft white light
-        this.scene.add( light );
+        this.scene.add(light);
+        light = new THREE.AmbientLight(0x404040); // soft white light
+        this.scene.add(light);
 
         //Renderer
-        this.renderer = new THREE.WebGLRenderer(); 
+        this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(cfg.canvasDimenstions[0], cfg.canvasDimenstions[1]);
         this.renderer.setClearColor(0xffffff, 1);
 
@@ -125,7 +123,7 @@ var StackViewer = function(parameters) {
             $(cfg.element).append(this.melement);
         }
         if (cfg.showSubStacks) {
-            this.renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown.bind(this), false );
+            this.renderer.domElement.addEventListener('mousedown', onDocumentMouseDown.bind(this), false);
         }
 
         //Animate
@@ -133,76 +131,86 @@ var StackViewer = function(parameters) {
         return this;
     };
 
+    this.animate = function() {
+        requestAnimationFrame(self.animate.bind(this));
+        if (self.should_rotate) self.roi_rot.rotateOnAxis(new THREE.Vector3(0, 1, 0), 0.01);
+        self.controls.update();
+        self.renderer.render(self.scene, self.camera);
+    };
+
     this.createSubstackPopup = function(substack) {
-        var sdiv, htmlstr;
+        var sdiv, htmlStr, leftOffset;
         sdiv = document.createElement('div');
-        sdiv.id='substack_data';
+        sdiv.id = 'substack_data';
         sdiv.style.position = 'absolute';
-        sdiv.style.top = this.renderer.domElement.offsetTop + "px";;
-        sdiv.style.left = (this.renderer.domElement.offsetLeft - 10) + 'px';
-        htmlstr = "<div style='font-weight:bold'>" + substack.name + "</div>" +
-           "<div>x: " + substack.info.x + "</div>" +
-           "<div>y: " + substack.info.y + "</div>" +
-           "<div>z: " + substack.info.z + "</div>" +
-           "<div>width: " + substack.info.width + "</div>" +
-           "<div>height: " + substack.info.height + "</div>" +
-           "<div>length: " + substack.info.length + "</div>";
+        sdiv.style.top = this.renderer.domElement.offsetTop + "px";
+        leftOffset = this.renderer.domElement.offsetLeft - 10;
+        if (leftOffset < 0) leftOffset = 0;
+        sdiv.style.left = leftOffset + 'px';
+        sdiv.style.padding = 2 + 'px';
+        htmlStr = "<div style='font-weight:bold'>" + substack.name + "</div>" +
+            "<div>x: " + substack.info.x + "</div>" +
+            "<div>y: " + substack.info.y + "</div>" +
+            "<div>z: " + substack.info.z + "</div>" +
+            "<div>width: " + substack.info.width + "</div>" +
+            "<div>height: " + substack.info.height + "</div>" +
+            "<div>length: " + substack.info.length + "</div>";
         if (substack.info.status.constructor === Array) {
-            htmlstr += "<div>user";
-            if (substack.info.status.length !== 1) htmlstr += "s";
-            htmlstr += ": ";
+            htmlStr += "<div>user";
+            if (substack.info.status.length !== 1) htmlStr += "s";
+            htmlStr += ": ";
             for (var i = 0; i < substack.info.status.length; i++) {
-                htmlstr += cfg.colors[substack.info.status[i]].name + " ";
-            } 
-            htmlstr += "</div>";
-        }
-        else {
-            htmlstr += "<div>proofreader: " + cfg.colors[substack.info.status].name + "</div>";
+                htmlStr += cfg.colors[substack.info.status[i]].name + " ";
+            }
+            htmlStr += "</div>";
+        } else {
+            htmlStr += "<div>proofreader: " + cfg.colors[substack.info.status].name + "</div>";
         }
         if ('annotations' in substack.info) {
-           htmlstr += "<div>annotations: " + substack.info.annotations + "</div>";
+            htmlStr += "<div>annotations: " + substack.info.annotations + "</div>";
 
         }
-        sdiv.innerHTML = htmlstr;
+        sdiv.innerHTML = htmlStr;
         return sdiv;
     };
 
     this.snapto = function(plane) {
-        var roi_x = 0, roi_y = 0, roi_z = 0;
+        var roi_x = 0,
+            roi_y = 0,
+            roi_z = 0;
         //stop auto rotation
         this.should_rotate = false;
         resetCamera();
         //reset position
-        this.roi_rot.lookAt(new THREE.Vector3(0,0,0))
+        this.roi_rot.lookAt(new THREE.Vector3(0, 0, 0));
         //set rotation axis
         if (plane == 'xz') roi_y = 1;
-        if (plane == 'xy') roi_x = 1; 
+        if (plane == 'xy') roi_x = 1;
         //rotate to new position
-        this.roi_rot.rotateOnAxis(new THREE.Vector3(roi_x, roi_y, roi_z), Math.PI/2);
+        this.roi_rot.rotateOnAxis(new THREE.Vector3(roi_x, roi_y, roi_z), Math.PI / 2);
     };
 
-    //Should be private
     var onDocumentMouseDown = function(event) {
         event.preventDefault();
         var vector, dir, raycaster;
-        self.mouse.x = ( (( event.clientX - self.renderer.domElement.offsetLeft ) / self.renderer.domElement.width) * self.renderer.devicePixelRatio) * 2 - 1;
-        self.mouse.y = - ( (( event.clientY - self.renderer.domElement.offsetTop ) / self.renderer.domElement.height) * self.renderer.devicePixelRatio ) * 2 + 1;
-        vector = new THREE.Vector3( self.mouse.x, self.mouse.y, -1 );
-        vector.unproject( self.camera );
+        self.mouse.x = (((event.clientX - self.renderer.domElement.offsetLeft) / self.renderer.domElement.width) * self.renderer.devicePixelRatio) * 2 - 1;
+        self.mouse.y = -(((event.clientY - self.renderer.domElement.offsetTop) / self.renderer.domElement.height) * self.renderer.devicePixelRatio) * 2 + 1;
+        vector = new THREE.Vector3(self.mouse.x, self.mouse.y, -1);
+        vector.unproject(self.camera);
         dir = new THREE.Vector3();
-        dir.set( 0, 0, -1 ).transformDirection( self.camera.matrixWorld );
+        dir.set(0, 0, -1).transformDirection(self.camera.matrixWorld);
         raycaster = new THREE.Raycaster();
-        raycaster.set( vector, dir );
+        raycaster.set(vector, dir);
         self.should_rotate = false;
-        if(self.intersects.length) { 
-            self.intersects.forEach( function(el) {
+        if (self.intersects.length) {
+            self.intersects.forEach(function(el) {
                 el.object.material.ambient.setHex(0x808080);
             });
         }
-        self.intersects = raycaster.intersectObjects( self.objects );
+        self.intersects = raycaster.intersectObjects(self.objects);
         $('#substack_data').remove();
-        if ( self.intersects.length > 0 ) {
-            self.intersects.some(function(el, idx){ 
+        if (self.intersects.length > 0) {
+            self.intersects.some(function(el, idx) {
                 if (el.object.material.opacity == 1.0) {
                     self.intersects[idx].object.material.ambient.setRGB(0, 0, 0);
                     $(cfg.element).append(self.createSubstackPopup(self.intersects[idx].object));
@@ -212,29 +220,28 @@ var StackViewer = function(parameters) {
         }
     };
 
-    //private?
-    this.animate = function() {
-        requestAnimationFrame(self.animate.bind(this));
-        if (self.should_rotate) self.roi_rot.rotateOnAxis(new THREE.Vector3(0,1,0), .01);
-        self.controls.update();
-        self.renderer.render(self.scene, self.camera);
-    };
-
-    //private?
-    var createMetadataElement = function(metadata){
+    var createMetadataElement = function(metadata) {
         var metadiv, toinnerhtml;
+
         function convertToHexColor(i) {
             var result = "#000000";
-            if      (i >= 0    && i <= 15)      { result = "#00000" + i.toString(16); }
-            else if (i >= 16   && i <= 255)     { result = "#0000"  + i.toString(16); }
-            else if (i >= 256  && i <= 4095)    { result = "#000"   + i.toString(16); }
-            else if (i >= 4096 && i <= 65535)       { result = "#00"    + i.toString(16); }
-            else if (i >= 65536 && i <= 1048575)    { result = "#0"     + i.toString(16); }
-            else if (i >= 1048576 && i <= 16777215) { result = "#"      + i.toString(16); }
+            if (i >= 0 && i <= 15) {
+                result = "#00000" + i.toString(16);
+            } else if (i >= 16 && i <= 255) {
+                result = "#0000" + i.toString(16);
+            } else if (i >= 256 && i <= 4095) {
+                result = "#000" + i.toString(16);
+            } else if (i >= 4096 && i <= 65535) {
+                result = "#00" + i.toString(16);
+            } else if (i >= 65536 && i <= 1048575) {
+                result = "#0" + i.toString(16);
+            } else if (i >= 1048576 && i <= 16777215) {
+                result = "#" + i.toString(16);
+            }
             return result;
         }
         metadiv = document.createElement('div');
-        metadiv.id='node_key';
+        metadiv.id = 'node_key';
         metadiv.style.position = 'absolute';
         metadiv.style.top = self.renderer.domElement.offsetTop + "px";
         metadiv.style.right = (self.renderer.domElement.offsetLeft - 10) + 'px';
@@ -242,24 +249,22 @@ var StackViewer = function(parameters) {
         metadiv.style.borderRadius = "5px";
         metadiv.style.padding = "2px";
         toinnerhtml = "";
-        Object.keys(metadata).forEach( function(m){
+        Object.keys(metadata).forEach(function(m) {
             var mtype = parseInt(m);
-            var three_color = metadata[m].color;
+            var three_color = metadata[mtype].color;
             var css_color = three_color;
-            if ( typeof three_color != 'string') css_color = convertToHexColor(three_color);
-            //do self via templates
+            if (typeof three_color != 'string') css_color = convertToHexColor(three_color);
+            //do this via templates
             toinnerhtml += "<div><span style='height:10px;width:10px;background:" + css_color +
-                        ";display:inline-block;'></span> : " + metadata[m].name +"</div>";
+                ";display:inline-block;'></span> : " + metadata[m].name + "</div>";
         });
         metadiv.innerHTML = toinnerhtml;
         return metadiv;
     };
-    //should be private
+
     var resetCamera = function() {
         self.camera.position.set(self.camera_position.x, self.camera_position.y, self.camera_position.z);
-        self.camera.up.set(0,1,0);
+        self.camera.up.set(0, 1, 0);
     };
-    
+
 };
-
-
