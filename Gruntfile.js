@@ -9,7 +9,10 @@ module.exports = function(grunt) {
     browserify: {
       app:          {
         options: {
-            transform:  [ require('grunt-react').browserify ]
+            transform:  [ require('grunt-react').browserify ],
+            browserifyOptions: {
+                standalone: "StackViewer"
+            }
         },
         src:        'js/stack3D.js',
         dest:       'build/js/bundle.js'

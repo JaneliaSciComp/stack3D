@@ -3,7 +3,7 @@ window.$ = window.jQuery = require('jquery');
 var THREE = require('three');
 var TrackballControls = require('three.trackball');
 
-StackViewer = function(parameters) {
+var StackViewer = function(parameters) {
     /**
      * Initialize Defaults
      */
