@@ -1,4 +1,9 @@
-var StackViewer = function(parameters) {
+window.$ = window.jQuery = require('jquery');
+
+var THREE = require('three');
+var TrackballControls = require('three.trackball');
+
+StackViewer = function(parameters) {
     /**
      * Initialize Defaults
      */
@@ -116,7 +121,7 @@ var StackViewer = function(parameters) {
         //Add to html
         $(cfg.element).append(this.renderer.domElement);
         $(this.renderer.domElement).css('position', 'static');
-        this.controls = new THREE.TrackballControls(this.camera, this.renderer.domElement);
+        this.controls = new TrackballControls(this.camera, this.renderer.domElement);
 
         if (cfg.showKey) {
             this.melement = createMetadataElement(cfg.colors);
@@ -268,3 +273,6 @@ var StackViewer = function(parameters) {
     };
 
 };
+
+module.exports = StackViewer;
+
