@@ -157,26 +157,12 @@ var StackViewer = function(parameters) {
         self.renderer.render(self.scene, self.camera);
     };
 
-    var cumulativeOffset = function(element) {
-        var top = 0, left = 0;
-        do {
-            top += element.offsetTop  || 0;
-            left += element.offsetLeft || 0;
-            element = element.offsetParent;
-        } while(element);
-
-        return {
-            top: top,
-            left: left
-        };
-    };
-
     this.createSubstackPopup = function(substack) {
         var sdiv, htmlStr, leftOffset, offset;
         sdiv = document.createElement('div');
         sdiv.id = 'substack_data';
         sdiv.style.position = 'absolute';
-        offset = cumulativeOffset(this.renderer.domElement);
+        offset = $(this.renderer.domElement).offset();
         sdiv.style.top = offset.top + "px";
         leftOffset = offset.left - 10;
         if (leftOffset < 0) leftOffset = 0;
@@ -227,7 +213,7 @@ var StackViewer = function(parameters) {
     var onDocumentMouseDown = function(event) {
         event.preventDefault();
         var vector, dir, raycaster, offset;
-        offset = cumulativeOffset(this.renderer.domElement);
+        offset = $(this.renderer.domElement).offset();
         self.mouse.x = (((event.clientX - offset.left) / self.renderer.domElement.width) * self.renderer.devicePixelRatio) * 2 - 1;
         self.mouse.y = -(((event.clientY - offset.top) / self.renderer.domElement.height) * self.renderer.devicePixelRatio) * 2 + 1;
         vector = new THREE.Vector3(self.mouse.x, self.mouse.y, -1);
@@ -278,9 +264,10 @@ var StackViewer = function(parameters) {
         metadiv = document.createElement('div');
         metadiv.id = 'node_key';
         metadiv.style.position = 'absolute';
-        offset = cumulativeOffset(self.renderer.domElement);
+        offset = $(self.renderer.domElement).offset();
         metadiv.style.top = offset.top + "px";
-        metadiv.style.right = (offset.left - 10) + 'px';
+        var offsetright = ($(window).width() - (offset.left + $(self.renderer.domElement).outerWidth()));
+        metadiv.style.right = (offsetright + 10) + 'px';
         metadiv.style.border = "solid 1px #aaaaaa";
         metadiv.style.borderRadius = "5px";
         metadiv.style.padding = "2px";
