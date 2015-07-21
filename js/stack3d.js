@@ -136,8 +136,22 @@ var StackViewer = function(parameters) {
         return this;
     };
 
+    this.destroy = function() {
+        cancelAnimationFrame(this.animationFrame);// Stop the animation
+        this.scene = null;
+        this.renderer = null;
+        this.camera = null;
+        this.controls = null;
+        $(cfg.element).empty();
+    };
+
+    var empty = function(el) {
+        console.log(el);
+        while (el.lastChild) el.removeChild(el.lastChild);
+    };
+
     this.animate = function() {
-        requestAnimationFrame(self.animate.bind(this));
+        this.animationFrame = requestAnimationFrame(self.animate.bind(this));
         if (self.should_rotate) self.roi_rot.rotateOnAxis(new THREE.Vector3(0, 1, 0), 0.01);
         self.controls.update();
         self.renderer.render(self.scene, self.camera);
