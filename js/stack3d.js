@@ -242,7 +242,7 @@ var StackViewer = function(parameters) {
     };
 
     var createMetadataElement = function(metadata) {
-        var metadiv, toinnerhtml;
+        var metadiv, toinnerhtml, offset;
 
         function convertToHexColor(i) {
             var result = "#000000";
