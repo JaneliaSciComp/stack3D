@@ -16,6 +16,7 @@ var StackViewer = function(parameters) {
         showSubStacks: true,
         element: 'document',
         rotate: true,
+        metadataTop: true,
         camera: 'ortho', //or 'perspective' 
         modal: false, //requires bootstrap to display modal
     };
@@ -270,7 +271,7 @@ var StackViewer = function(parameters) {
     }
 
     var createMetadataElement = function(metadata) {
-        var metadiv, toinnerhtml, offset;
+        var metadiv, toinnerhtml, offset, offsetright, elType;
 
         function convertToHexColor(i) {
             var result = "#000000";
@@ -294,20 +295,25 @@ var StackViewer = function(parameters) {
         metadiv.style.position = 'absolute';
         offset = $(self.renderer.domElement).offset();
         metadiv.style.top = offset.top + "px";
-        var offsetright = ($(window).width() - (offset.left + $(self.renderer.domElement).outerWidth()));
-        metadiv.style.right = (offsetright + 10) + 'px';
+        if (! cfg.metadataTop) {
+            offsetright = ($(window).width() - (offset.left + $(self.renderer.domElement).outerWidth()));
+            metadiv.style.right = (offsetright + 10) + 'px';
+        }
         metadiv.style.border = "solid 1px #aaaaaa";
         metadiv.style.borderRadius = "5px";
         metadiv.style.padding = "2px";
         toinnerhtml = "";
+        if (cfg.metadataTop) elType = 'span';
+        else elType = "div"
+
         Object.keys(metadata).forEach(function(m) {
             var mtype = parseInt(m);
             var three_color = metadata[mtype].color;
             var css_color = three_color;
             if (typeof three_color != 'string') css_color = convertToHexColor(three_color);
             //do this via templates
-            toinnerhtml += "<div><span style='height:10px;width:10px;background:" + css_color +
-                ";display:inline-block;'></span> : " + metadata[m].name + "</div>";
+            toinnerhtml += "<" + elType + "><span style='margin-left: 5px;height:10px;width:10px;background:" + css_color +
+                ";display:inline-block;'></span> : " + metadata[m].name + "</" + elType + ">";
         });
         metadiv.innerHTML = toinnerhtml;
         return metadiv;
