@@ -16,6 +16,7 @@ var StackViewer = function(parameters) {
         showSubStacks: true,
         element: 'document',
         rotate: true,
+        modal: false, //requires bootstrap to display modal
     };
 
     var conf = $.extend({}, parameters);
@@ -145,11 +146,6 @@ var StackViewer = function(parameters) {
         $(cfg.element).empty();
     };
 
-    var empty = function(el) {
-        console.log(el);
-        while (el.lastChild) el.removeChild(el.lastChild);
-    };
-
     this.animate = function() {
         this.animationFrame = requestAnimationFrame(self.animate.bind(this));
         if (self.should_rotate) self.roi_rot.rotateOnAxis(new THREE.Vector3(0, 1, 0), 0.01);
@@ -168,28 +164,7 @@ var StackViewer = function(parameters) {
         if (leftOffset < 0) leftOffset = 0;
         sdiv.style.left = leftOffset + 'px';
         sdiv.style.padding = 2 + 'px';
-        htmlStr = "<div style='font-weight:bold'>" + substack.name + "</div>" +
-            "<div>x: " + substack.info.x + "</div>" +
-            "<div>y: " + substack.info.y + "</div>" +
-            "<div>z: " + substack.info.z + "</div>" +
-            "<div>width: " + substack.info.width + "</div>" +
-            "<div>height: " + substack.info.height + "</div>" +
-            "<div>length: " + substack.info.length + "</div>";
-        if (substack.info.status.constructor === Array) {
-            htmlStr += "<div>user";
-            if (substack.info.status.length !== 1) htmlStr += "s";
-            htmlStr += ": ";
-            for (var i = 0; i < substack.info.status.length; i++) {
-                htmlStr += cfg.colors[substack.info.status[i]].name + " ";
-            }
-            htmlStr += "</div>";
-        } else {
-            htmlStr += "<div>proofreader: " + cfg.colors[substack.info.status].name + "</div>";
-        }
-        if ('annotations' in substack.info) {
-            htmlStr += "<div>annotations: " + substack.info.annotations + "</div>";
-
-        }
+        htmlStr = substackPopupText(substack);
         sdiv.innerHTML = htmlStr;
         return sdiv;
     };
@@ -210,12 +185,34 @@ var StackViewer = function(parameters) {
         this.roi_rot.rotateOnAxis(new THREE.Vector3(roi_x, roi_y, roi_z), Math.PI / 2);
     };
 
+    var substackPopupText = function(substack) {
+        var htmlStr;
+        htmlStr = "<div style='font-weight:bold'>" + substack.name + "</div>" +
+            "<div>x: " + substack.info.x + "</div>" +
+            "<div>y: " + substack.info.y + "</div>" +
+            "<div>z: " + substack.info.z + "</div>" +
+            "<div>width: " + substack.info.width + "</div>" +
+            "<div>height: " + substack.info.height + "</div>" +
+            "<div>length: " + substack.info.length + "</div>";
+        if ('annotations' in substack.info) {
+            htmlStr += "<div>annotations: " + substack.info.annotations + "</div>";
+        }
+        return htmlStr;
+    }
+
+    var empty = function(el) {
+        console.log(el);
+        while (el.lastChild) el.removeChild(el.lastChild);
+    };
+
     var onDocumentMouseDown = function(event) {
         event.preventDefault();
-        var vector, dir, raycaster, offset;
+        var vector, dir, raycaster, offset, scrollTop, scrollLeft, substackPopup, modal;
         offset = $(this.renderer.domElement).offset();
-        self.mouse.x = (((event.clientX - offset.left) / self.renderer.domElement.width) * self.renderer.devicePixelRatio) * 2 - 1;
-        self.mouse.y = -(((event.clientY - offset.top) / self.renderer.domElement.height) * self.renderer.devicePixelRatio) * 2 + 1;
+        scrollTop = $(document).scrollTop();
+        scrollLeft = $(document).scrollLeft()
+        self.mouse.x = (((event.clientX - offset.left + scrollLeft) / self.renderer.domElement.width) * self.renderer.devicePixelRatio) * 2 - 1;
+        self.mouse.y = -(((event.clientY - offset.top - scrollTop) / self.renderer.domElement.height) * self.renderer.devicePixelRatio) * 2 + 1;
         vector = new THREE.Vector3(self.mouse.x, self.mouse.y, -1);
         vector.unproject(self.camera);
         dir = new THREE.Vector3();
@@ -234,12 +231,38 @@ var StackViewer = function(parameters) {
             self.intersects.some(function(el, idx) {
                 if (el.object.material.opacity == 1.0) {
                     self.intersects[idx].object.material.ambient.setRGB(0, 0, 0);
-                    $(cfg.element).append(self.createSubstackPopup(self.intersects[idx].object));
+                    if (cfg.modal) {
+                        modal = wrapPopupInModal(substackPopupText(self.intersects[idx].object));
+                        $(cfg.element).append(modal);
+                        $('#stack3d_stats_modal').modal('toggle');
+                        $('#stack3d_stats_modal').on('hidden.bs.modal', function(){
+                            this.remove();
+                        });
+                    }
+                    else {
+                        substackPopup = self.createSubstackPopup(self.intersects[idx].object);
+                        $(cfg.element).append(substackPopup);
+                    }
                     return true; //breaks out of some loop
                 }
             });
         }
     };
+
+    var wrapPopupInModal = function(popup) {
+        var preModal, postModal, modalDiv;
+        modalDiv = document.createElement('div');
+        preModal = '<div id="stack3d_stats_modal" class="modal fade">\
+                    <div class="modal-dialog">\
+                    <div class="modal-content">\
+                    <div class="modal-body">';
+        postModal = '</div>\
+        </div>\
+        </div>\
+        </div>';
+        modalDiv.innerHTML = preModal + popup + postModal;
+        return modalDiv;
+    }
 
     var createMetadataElement = function(metadata) {
         var metadiv, toinnerhtml, offset;
