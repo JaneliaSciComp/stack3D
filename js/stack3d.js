@@ -16,7 +16,7 @@ var StackViewer = function(parameters) {
         showSubStacks: true,
         element: 'document',
         rotate: true,
-        metadataTop: true,
+        metadataTop: false,
         camera: 'ortho', //or 'perspective' 
         modal: false, //requires bootstrap to display modal
     };
@@ -160,12 +160,13 @@ var StackViewer = function(parameters) {
     };
 
     this.createSubstackPopup = function(substack) {
-        var sdiv, htmlStr, leftOffset, offset;
+        var sdiv, htmlStr, leftOffset, offset, additionalTopOffset;
         sdiv = document.createElement('div');
         sdiv.id = 'substack_data';
         sdiv.style.position = 'absolute';
         offset = $(this.renderer.domElement).offset();
-        sdiv.style.top = offset.top + "px";
+        additionalTopOffset = (cfg.metadataTop)? 25 : 0;
+        sdiv.style.top = offset.top + additionalTopOffset + "px";
         leftOffset = offset.left - 10;
         if (leftOffset < 0) leftOffset = 0;
         sdiv.style.left = leftOffset + 'px';
