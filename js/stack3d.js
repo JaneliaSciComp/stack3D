@@ -16,6 +16,7 @@ var StackViewer = function(parameters) {
         showSubStacks: true,
         element: 'document',
         rotate: true,
+        camera: 'ortho', //or 'perspective' 
         modal: false, //requires bootstrap to display modal
     };
 
@@ -88,9 +89,13 @@ var StackViewer = function(parameters) {
 
         //Camera
         ratio = cfg.canvasDimenstions[0] / cfg.canvasDimenstions[1];
-        this.camera = new THREE.OrthographicCamera((ratio * stackMaxDimension) / -2, (ratio * stackMaxDimension) / 2, stackMaxDimension / 2, stackMaxDimension / -2, 1, 100000);
-        //camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 100000);
-        this.camera.position.z = stackMaxDimension;
+        if (cfg.camera === 'ortho') {
+            this.camera = new THREE.OrthographicCamera((ratio * stackMaxDimension) / -2, (ratio * stackMaxDimension) / 2, stackMaxDimension / 2, stackMaxDimension / -2, 1, 100000);
+        }
+        else {
+            this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 100000);
+        }
+        this.camera.position.z = stackMaxDimension * 1.5;
         this.camera_position = this.camera.position.clone();
         this.camera_rotation = this.camera.rotation.clone();
 
