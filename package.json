@@ -27,7 +27,7 @@
     "react": "^0.13.3",
     "react-router": "^0.13.3",
     "bootstrap": "^3.3.4",
-    "three": "0.69.0",
+    "three": "0.70.0",
     "three.trackball": "latest",
     "jquery": "^2.1.4"
     }
