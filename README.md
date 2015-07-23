@@ -12,3 +12,9 @@ of a series of subvolumes with spatial locations and different properties.
 
 Installed js file located in build/js/bundle.js
 
+##Author Information
+Written by Charlotte Weaver (<weaverc10@janelia.hhmi.org>)
+
+[Scientific Computing](http://www.janelia.org/research-resources/computing-resources)  
+[Janelia Farm Research Campus](http://www.janelia.org)  
+[Howard Hughes Medical Institute](http://www.hhmi.org)
