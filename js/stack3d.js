@@ -213,47 +213,53 @@ var StackViewer = function(parameters) {
     };
 
     var onDocumentMouseDown = function(event) {
-        event.preventDefault();
-        var vector, dir, raycaster, offset, scrollTop, scrollLeft, substackPopup, modal;
-        offset = $(this.renderer.domElement).offset();
-        scrollTop = $(document).scrollTop();
-        scrollLeft = $(document).scrollLeft()
-        self.mouse.x = (((event.clientX - offset.left + scrollLeft) / self.renderer.domElement.width) * self.renderer.devicePixelRatio) * 2 - 1;
-        self.mouse.y = -(((event.clientY - offset.top - scrollTop) / self.renderer.domElement.height) * self.renderer.devicePixelRatio) * 2 + 1;
-        vector = new THREE.Vector3(self.mouse.x, self.mouse.y, -1);
-        vector.unproject(self.camera);
-        dir = new THREE.Vector3();
-        dir.set(0, 0, -1).transformDirection(self.camera.matrixWorld);
-        raycaster = new THREE.Raycaster();
-        raycaster.set(vector, dir);
-        self.should_rotate = false;
-        if (self.intersects.length) {
-            self.intersects.forEach(function(el) {
-                el.object.material.ambient.setHex(0x808080);
-            });
-        }
-        self.intersects = raycaster.intersectObjects(self.objects);
-        $('#substack_data').remove();
-        if (self.intersects.length > 0) {
-            self.intersects.some(function(el, idx) {
-                if (el.object.material.opacity == 1.0) {
-                    self.intersects[idx].object.material.ambient.setRGB(0, 0, 0);
-                    if (cfg.modal) {
-                        modal = wrapPopupInModal(substackPopupText(self.intersects[idx].object));
-                        $(cfg.element).append(modal);
-                        $('#stack3d_stats_modal').modal('toggle');
-                        $('#stack3d_stats_modal').on('hidden.bs.modal', function(){
-                            this.remove();
-                        });
-                    }
-                    else {
-                        substackPopup = self.createSubstackPopup(self.intersects[idx].object);
-                        $(cfg.element).append(substackPopup);
-                    }
-                    return true; //breaks out of some loop
+        //only show modal on click, not on drag
+        $(event.target).on('mouseup mousemove', function handler(event) {
+            if (event.type === 'mouseup') {
+                event.preventDefault();
+                var vector, dir, raycaster, offset, scrollTop, scrollLeft, substackPopup, modal;
+                offset = $(self.renderer.domElement).offset();
+                scrollTop = $(document).scrollTop();
+                scrollLeft = $(document).scrollLeft()
+                self.mouse.x = (((event.clientX - offset.left + scrollLeft) / self.renderer.domElement.width) * self.renderer.devicePixelRatio) * 2 - 1;
+                self.mouse.y = -(((event.clientY - offset.top - scrollTop) / self.renderer.domElement.height) * self.renderer.devicePixelRatio) * 2 + 1;
+                vector = new THREE.Vector3(self.mouse.x, self.mouse.y, -1);
+                vector.unproject(self.camera);
+                dir = new THREE.Vector3();
+                dir.set(0, 0, -1).transformDirection(self.camera.matrixWorld);
+                raycaster = new THREE.Raycaster();
+                raycaster.set(vector, dir);
+                self.should_rotate = false;
+                if (self.intersects.length) {
+                    self.intersects.forEach(function(el) {
+                        el.object.material.ambient.setHex(0x808080);
+                    });
                 }
-            });
-        }
+                self.intersects = raycaster.intersectObjects(self.objects);
+                $('#substack_data').remove();
+                if (self.intersects.length > 0) {
+                    self.intersects.some(function(el, idx) {
+                        if (el.object.material.opacity == 1.0) {
+                            self.intersects[idx].object.material.ambient.setRGB(0, 0, 0);
+                            if (cfg.modal) {
+                                modal = wrapPopupInModal(substackPopupText(self.intersects[idx].object));
+                                $(cfg.element).append(modal);
+                                $('#stack3d_stats_modal').modal('toggle');
+                                $('#stack3d_stats_modal').on('hidden.bs.modal', function(){
+                                    this.remove();
+                                });
+                            }
+                            else {
+                                substackPopup = self.createSubstackPopup(self.intersects[idx].object);
+                                $(cfg.element).append(substackPopup);
+                            }
+                            return true; //breaks out of some loop
+                        }
+                    });
+                }
+            } 
+            $(event.target).off('mouseup mousemove', handler);
+        });
     };
 
     var wrapPopupInModal = function(popup) {
