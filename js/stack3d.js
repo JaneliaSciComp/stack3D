@@ -20,7 +20,7 @@ var StackViewer = function(parameters) {
         metadataTop: false,
         camera: 'ortho', //or 'perspective' 
         modal: false, //requires bootstrap to display modal
-        colorInterpolate : [],
+        colorInterpolate : [], //requires chroma.js and that all statuses can be cast as floats
     };
 
     var conf = $.extend({}, parameters);
