@@ -216,6 +216,7 @@ var StackViewer = function(parameters) {
     var onDocumentMouseDown = function(event) {
         //only show modal on click, not on drag
         $(event.target).on('mouseup mousemove', function handler(event) {
+            self.should_rotate = false;
             if (event.type === 'mouseup') {
                 event.preventDefault();
                 var vector, dir, offset, scrollTop, scrollLeft, substackPopup, modal;
@@ -225,8 +226,6 @@ var StackViewer = function(parameters) {
                 self.mouse.x = ((event.clientX - offset.left + scrollLeft) / self.renderer.domElement.width) * 2 - 1;
                 self.mouse.y = -((event.clientY - offset.top - scrollTop) / self.renderer.domElement.height) * 2 + 1;
                 self.raycaster.setFromCamera(self.mouse, self.camera);
-
-                self.should_rotate = false;
                 if (self.intersects.length) {
                     self.intersects.forEach(function(el) {
                         el.object.material.ambient.setHex(0x808080);
