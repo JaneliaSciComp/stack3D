@@ -122,7 +122,7 @@ var StackViewer = function(parameters) {
         this.scene.add(light);
 
         //Renderer
-        this.renderer = new THREE.WebGLRenderer();
+        this.renderer = new THREE.WebGLRenderer({antialias: true, preserveDrawingBuffer: true});
         this.renderer.setSize(cfg.canvasDimenstions[0], cfg.canvasDimenstions[1]);
         this.renderer.setClearColor(0xffffff, 1);
 
@@ -176,6 +176,16 @@ var StackViewer = function(parameters) {
         sdiv.innerHTML = htmlStr;
         return sdiv;
     };
+
+    this.screenshot = function() {
+        var dataURI;
+        dataURI = this.renderer.domElement.toDataURL("application/octet-stream");
+        downloadLink = document.createElement('a');
+        $(downloadLink).attr('href', dataURI);
+        $(downloadLink).attr('download', 'stack3d.png');
+        downloadLink.click();
+        return false;
+    }
 
     this.snapto = function(plane) {
         var roi_x = 0,
