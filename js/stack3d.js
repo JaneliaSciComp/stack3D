@@ -21,6 +21,7 @@ var StackViewer = function(parameters) {
         camera: 'ortho', //or 'perspective' 
         modal: false, //requires bootstrap to display modal
         colorInterpolate : [], //requires chroma.js and that all statuses can be cast as floats
+        metadataRange: [], //only useful if you are using color interpolate
     };
 
     var conf = $.extend({}, parameters);
@@ -57,13 +58,13 @@ var StackViewer = function(parameters) {
         if (cfg.colorInterpolate.length) {
             colorScale = chroma.scale(cfg.colorInterpolate);
             this.colorScale =colorScale;
-            statusScale = [Infinity,0];
+            
+            if (! cfg.metadataRange.length) cfg.metadataRange = [Infinity,0];
             cfg.substacks.forEach( function(ss) {
-                if (parseFloat(ss.status) < statusScale[0]) statusScale[0] = parseFloat(ss.status);
-                if (parseFloat(ss.status) > statusScale[1]) statusScale[1] = parseFloat(ss.status);
+                if (parseFloat(ss.status) < cfg.metadataRange[0]) cfg.metadataRange[0] = parseFloat(ss.status);
+                if (parseFloat(ss.status) > cfg.metadataRange[1]) cfg.metadataRange[1] = parseFloat(ss.status);
             });
         }
-        console.log(statusScale);
 
         cfg.substacks.forEach(function(ss) {
             var geometry, mesh, material, user_id, color;
@@ -72,7 +73,7 @@ var StackViewer = function(parameters) {
                 geometry.faces.forEach(function(face, idx) {
                     user_id = ss.status[idx % ss.status.length];
                     if (cfg.colorInterpolate.length) {
-                        color = colorScale((parseFloat(ss.status)-statusScale[0])/ (statusScale[1]-statusScale[0])).hex();
+                        color = colorScale((parseFloat(ss.status)-cfg.metadataRange[0])/ (cfg.metadataRange[1]-cfg.metadataRange[0])).hex();
                     }
                     else {
                         color = cfg.colors[user_id].color;
@@ -86,7 +87,7 @@ var StackViewer = function(parameters) {
                 });
             } else {
                 if (cfg.colorInterpolate.length) {
-                    var fraction = (parseFloat(ss.status)-statusScale[0])/ (statusScale[1]-statusScale[0]);
+                    var fraction = (parseFloat(ss.status)-cfg.metadataRange[0])/ (cfg.metadataRange[1]-cfg.metadataRange[0]);
                     color = colorScale(fraction).hex();
                 }
                 else {
@@ -158,7 +159,7 @@ var StackViewer = function(parameters) {
 
         if (cfg.showKey) {
 
-            this.melement = (cfg.colorInterpolate.length)? createMetadataElement(colorScale, statusScale): createMetadataElement();
+            this.melement = (cfg.colorInterpolate.length)? createMetadataElement(colorScale, cfg.metadataRange): createMetadataElement();
             $(cfg.element).append(this.melement);
         }
         if (cfg.showSubStacks) {
