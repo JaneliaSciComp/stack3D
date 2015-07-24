@@ -231,6 +231,23 @@ var StackViewer = function(parameters) {
         this.roi_rot.rotateOnAxis(new THREE.Vector3(roi_x, roi_y, roi_z), Math.PI / 2);
     };
 
+    this.ghost = function(plane, min, max) {
+        var pos, stackMaxDimension;
+        max = max || false;
+        stackMaxDimension = Math.max(cfg.stackDimensions[0], cfg.stackDimensions[1], cfg.stackDimensions[2]);
+        this.roi_rot.children[0].children.forEach(function(el, idx) {
+                if (plane === 'x') pos = el.position.x;
+                if (plane === 'y') pos = el.position.z;
+                if (plane === 'z') pos = el.position.y;
+                if (pos > min && (max === false || pos < max)) {
+                    el.material.opacity = 1.0;
+                }
+                else {
+                     el.material.opacity = 0.1;
+                }
+        })
+    }
+
     var substackPopupText = function(substack) {
         var htmlStr;
         htmlStr = "<div style='font-weight:bold'>" + substack.name + "</div>" +
