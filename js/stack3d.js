@@ -349,12 +349,12 @@ var StackViewer = function(parameters) {
 
         if (cfg.colorInterpolate.length) {
             //create interpolate scheme
-            toinnerhtml += "<" + elType + ">" + minmax[0] + "<" + elType + ">";
+            toinnerhtml += "<" + elType + ">" + parseFloat(minmax[0]).toFixed(1) + "<" + elType + ">";
             for (var i = 0; i <= 10; i += 1) {
                 toinnerhtml += "<" + elType + "><span style='height:10px;width:20px;background:" + scale(i/10.0) +
                     ";display:inline-block;'></span></" + elType + ">";
             }
-            toinnerhtml += "<" + elType + ">" + minmax[1] + "<" + elType + ">";
+            toinnerhtml += "<" + elType + ">" + parseFloat(minmax[1]).toFixed(1) + "<" + elType + ">";
         }
         else {
             Object.keys(cfg.colors).forEach(function(m) {
