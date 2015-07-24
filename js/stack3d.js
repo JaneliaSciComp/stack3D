@@ -184,6 +184,7 @@ var StackViewer = function(parameters) {
         $(downloadLink).attr('href', dataURI);
         $(downloadLink).attr('download', 'stack3d.png');
         downloadLink.click();
+        $(downloadLink).remove();
         return false;
     }
 
