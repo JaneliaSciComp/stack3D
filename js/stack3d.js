@@ -2,6 +2,7 @@ window.$ = window.jQuery = require('jquery');
 
 var THREE = require('three');
 var TrackballControls = require('three.trackball');
+window.chroma = require('chroma-js');
 
 var StackViewer = function(parameters) {
     /**
@@ -19,6 +20,7 @@ var StackViewer = function(parameters) {
         metadataTop: false,
         camera: 'ortho', //or 'perspective' 
         modal: false, //requires bootstrap to display modal
+        colorInterpolate : [],
     };
 
     var conf = $.extend({}, parameters);
@@ -27,7 +29,7 @@ var StackViewer = function(parameters) {
 
     this.init = function() {
         //Setup Variables
-        var roi, ratio, light, lx, ly, lz, stackMaxDimension;
+        var roi, ratio, light, lx, ly, lz, stackMaxDimension, colorScale, statusScale;
 
         if (!cfg.stackDimensions) {
             cfg.stackDimensions = [0, 0, 0];
@@ -52,13 +54,29 @@ var StackViewer = function(parameters) {
 
         //Objects
         roi = new THREE.Object3D();
+        if (cfg.colorInterpolate.length) {
+            colorScale = chroma.scale(cfg.colorInterpolate);
+            this.colorScale =colorScale;
+            statusScale = [Infinity,0];
+            cfg.substacks.forEach( function(ss) {
+                if (parseFloat(ss.status) < statusScale[0]) statusScale[0] = parseFloat(ss.status);
+                if (parseFloat(ss.status) > statusScale[1]) statusScale[1] = parseFloat(ss.status);
+            });
+        }
+        console.log(statusScale);
+
         cfg.substacks.forEach(function(ss) {
             var geometry, mesh, material, user_id, color;
             geometry = new THREE.BoxGeometry(ss.width, ss.height, ss.length);
             if (ss.status.constructor === Array) {
                 geometry.faces.forEach(function(face, idx) {
                     user_id = ss.status[idx % ss.status.length];
-                    color = cfg.colors[user_id].color;
+                    if (cfg.colorInterpolate.length) {
+                        color = colorScale((parseFloat(ss.status)-statusScale[0])/ (statusScale[1]-statusScale[0])).hex();
+                    }
+                    else {
+                        color = cfg.colors[user_id].color;
+                    }
                     face.color.set(color);
                     material = new THREE.MeshLambertMaterial({
                         ambient: 0x808080,
@@ -67,9 +85,16 @@ var StackViewer = function(parameters) {
                     });
                 });
             } else {
+                if (cfg.colorInterpolate.length) {
+                    var fraction = (parseFloat(ss.status)-statusScale[0])/ (statusScale[1]-statusScale[0]);
+                    color = colorScale(fraction).hex();
+                }
+                else {
+                    color = cfg.colors[ss.status].color;
+                }
                 material = new THREE.MeshLambertMaterial({
                     ambient: 0x808080,
-                    color: cfg.colors[ss.status].color,
+                    color: color,
                     transparent: true,
                 });
             }
@@ -132,7 +157,8 @@ var StackViewer = function(parameters) {
         this.controls = new TrackballControls(this.camera, this.renderer.domElement);
 
         if (cfg.showKey) {
-            this.melement = createMetadataElement(cfg.colors);
+
+            this.melement = (cfg.colorInterpolate.length)? createMetadataElement(colorScale, statusScale): createMetadataElement();
             $(cfg.element).append(this.melement);
         }
         if (cfg.showSubStacks) {
@@ -284,8 +310,9 @@ var StackViewer = function(parameters) {
         return modalDiv;
     }
 
-    var createMetadataElement = function(metadata) {
+    var createMetadataElement = function(scale, minmax) {
         var metadiv, toinnerhtml, offset, offsetright, elType;
+        var myscale = scale || false;
 
         function convertToHexColor(i) {
             var result = "#000000";
@@ -320,15 +347,26 @@ var StackViewer = function(parameters) {
         if (cfg.metadataTop) elType = 'span';
         else elType = "div"
 
-        Object.keys(metadata).forEach(function(m) {
-            var mtype = parseInt(m);
-            var three_color = metadata[mtype].color;
-            var css_color = three_color;
-            if (typeof three_color != 'string') css_color = convertToHexColor(three_color);
-            //do this via templates
-            toinnerhtml += "<" + elType + "><span style='margin-left: 5px;height:10px;width:10px;background:" + css_color +
-                ";display:inline-block;'></span> : " + metadata[m].name + "</" + elType + ">";
-        });
+        if (cfg.colorInterpolate.length) {
+            //create interpolate scheme
+            toinnerhtml += "<" + elType + ">" + minmax[0] + "<" + elType + ">";
+            for (var i = 0; i <= 10; i += 1) {
+                toinnerhtml += "<" + elType + "><span style='height:10px;width:20px;background:" + scale(i/10.0) +
+                    ";display:inline-block;'></span></" + elType + ">";
+            }
+            toinnerhtml += "<" + elType + ">" + minmax[1] + "<" + elType + ">";
+        }
+        else {
+            Object.keys(cfg.colors).forEach(function(m) {
+                var mtype = parseInt(m);
+                var three_color = cfg.colors[mtype].color;
+                var css_color = three_color;
+                if (typeof three_color != 'string') css_color = convertToHexColor(three_color);
+                //do this via templates
+                toinnerhtml += "<" + elType + "><span style='margin-left: 5px;height:10px;width:10px;background:" + css_color +
+                    ";display:inline-block;'></span> : " + cfg.colors[m].name + "</" + elType + ">";
+            });
+        }
         metadiv.innerHTML = toinnerhtml;
         return metadiv;
     };
