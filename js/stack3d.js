@@ -165,7 +165,7 @@ var StackViewer = function(parameters) {
         sdiv = document.createElement('div');
         sdiv.id = 'substack_data';
         sdiv.style.position = 'absolute';
-        offset = $(this.renderer.domElement).offset();
+        offset = $(this.renderer.domElement).position();
         additionalTopOffset = (cfg.metadataTop)? 25 : 0;
         sdiv.style.top = offset.top + additionalTopOffset + "px";
         leftOffset = offset.left - 10;
@@ -296,7 +296,7 @@ var StackViewer = function(parameters) {
         metadiv = document.createElement('div');
         metadiv.id = 'node_key';
         metadiv.style.position = 'absolute';
-        offset = $(self.renderer.domElement).offset();
+        offset = $(self.renderer.domElement).position();
         metadiv.style.top = offset.top + "px";
         if (! cfg.metadataTop) {
             offsetright = ($(window).width() - (offset.left + $(self.renderer.domElement).outerWidth()));
