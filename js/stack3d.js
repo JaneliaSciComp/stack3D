@@ -4,6 +4,7 @@ var THREE = require('three');
 var TrackballControls = require('three.trackball');
 window.chroma = require('chroma-js');
 
+
 var StackViewer = function(parameters) {
     /**
      * Initialize Defaults
@@ -33,18 +34,34 @@ var StackViewer = function(parameters) {
         var roi, ratio, light, lx, ly, lz, stackMaxDimension, colorScale, statusScale;
 
         if (!cfg.stackDimensions) {
-            cfg.stackDimensions = [0, 0, 0];
+            //cfg.stackDimensions = [0, 0, 0];
+            cfg.stackDimensions = {
+                hmax: null,
+                hmin: null,
+                lmin: null,
+                lmax: null,
+                wmin: null,
+                wmax: null,
+            };
+
             var ssx, ssy, ssz;
             cfg.substacks.forEach(function(ss) {
-                ssx = ss.x + ss.width;
-                ssy = ss.z + ss.height;
-                ssz = ss.y + ss.length;
-                if (ssx > cfg.stackDimensions[0]) cfg.stackDimensions[0] = ssx;
-                if (ssy > cfg.stackDimensions[1]) cfg.stackDimensions[1] = ssy;
-                if (ssz > cfg.stackDimensions[2]) cfg.stackDimensions[2] = ssz;
+                sswidth = ss.x + ss.width;
+                ssheight = ss.z + ss.height;
+                sslength = ss.y + ss.length;
+                // if (sswidth > cfg.stackDimensions[0]) cfg.stackDimensions[0] = sswidth;
+                // if (ssheight > cfg.stackDimensions[1]) cfg.stackDimensions[1] = ssheight;
+                // if (sslength > cfg.stackDimensions[2]) cfg.stackDimensions[2] = sslength;
+                // z and y are swapped in three js world
+                if (cfg.stackDimensions.wmin == null || ss.x < cfg.stackDimensions.wmin) cfg.stackDimensions.wmin = ss.x;
+                if (cfg.stackDimensions.wmax == null || sswidth > cfg.stackDimensions.wmax) cfg.stackDimensions.wmax = sswidth;
+                if (cfg.stackDimensions.lmin == null || ss.y < cfg.stackDimensions.lmin) cfg.stackDimensions.lmin = ss.y;
+                if (cfg.stackDimensions.lmax == null || sslength > cfg.stackDimensions.lmax) cfg.stackDimensions.lmax = sslength;
+                if (cfg.stackDimensions.hmin == null || ss.z < cfg.stackDimensions.hmin) cfg.stackDimensions.hmin = ss.z;
+                if (cfg.stackDimensions.hmax == null || ssheight > cfg.stackDimensions.hmax) cfg.stackDimensions.hmax = ssheight;
             });
         }
-        stackMaxDimension = Math.max(cfg.stackDimensions[0], cfg.stackDimensions[1], cfg.stackDimensions[2]);
+        stackMaxDimension = Math.max(cfg.stackDimensions.wmax, cfg.stackDimensions.lmax, cfg.stackDimensions.hmax);
 
         this.objects = [];
         this.intersects = [];
@@ -101,7 +118,7 @@ var StackViewer = function(parameters) {
             }
             mesh = new THREE.Mesh(geometry, material);
             mesh.position.x = ss.x;
-            mesh.position.y = stackMaxDimension - ss.z;
+            mesh.position.y = cfg.stackDimensions.hmax - ss.z;
             mesh.position.z = ss.y;
             mesh.name = ss.id;
             mesh.info = ss;
@@ -109,9 +126,11 @@ var StackViewer = function(parameters) {
             self.objects.push(mesh);
 
         });
-        roi.position.x = -(stackMaxDimension / 2);
-        roi.position.y = -(stackMaxDimension / 2);
-        roi.position.z = -(stackMaxDimension / 2);
+        
+        console.log(cfg.stackDimensions);
+        roi.position.y = -((cfg.stackDimensions.hmax - cfg.stackDimensions.hmin) /2);
+        roi.position.z = -(cfg.stackDimensions.lmin + ((cfg.stackDimensions.lmax - cfg.stackDimensions.lmin) /2));
+        roi.position.x = -(cfg.stackDimensions.wmin + ((cfg.stackDimensions.wmax - cfg.stackDimensions.wmin) /2));
         this.roi_rot = new THREE.Object3D();
         this.roi_rot.add(roi);
 
@@ -124,6 +143,7 @@ var StackViewer = function(parameters) {
             this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 100000);
         }
         this.camera.position.z = stackMaxDimension * 1.5;
+
         this.camera_position = this.camera.position.clone();
         this.camera_rotation = this.camera.rotation.clone();
 
@@ -232,9 +252,8 @@ var StackViewer = function(parameters) {
     };
 
     this.ghost = function(plane, min, max) {
-        var pos, stackMaxDimension;
+        var pos
         max = max || false;
-        stackMaxDimension = Math.max(cfg.stackDimensions[0], cfg.stackDimensions[1], cfg.stackDimensions[2]);
         this.roi_rot.children[0].children.forEach(function(el, idx) {
                 if (plane === 'x') pos = el.position.x;
                 if (plane === 'y') pos = el.position.z;
