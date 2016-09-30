@@ -19,7 +19,7 @@ var StackViewer = function(parameters) {
         element: 'document',
         rotate: true,
         metadataTop: false,
-        camera: 'ortho', //or 'perspective' 
+        camera: 'ortho', //or 'perspective'
         modal: false, //requires bootstrap to display modal
         colorInterpolate : [], //requires chroma.js and that all statuses can be cast as floats
         metadataRange: [], //only useful if you are using color interpolate
@@ -66,7 +66,7 @@ var StackViewer = function(parameters) {
         this.objects = [];
         this.intersects = [];
         this.mouse = new THREE.Vector2();
-        this.raycaster = new THREE.Raycaster(); 
+        this.raycaster = new THREE.Raycaster();
         this.should_rotate = cfg.rotate;
 
 
@@ -74,8 +74,8 @@ var StackViewer = function(parameters) {
         roi = new THREE.Object3D();
         if (cfg.colorInterpolate.length) {
             colorScale = chroma.scale(cfg.colorInterpolate);
-            this.colorScale =colorScale;
-            
+            this.colorScale = colorScale;
+
             if (! cfg.metadataRange.length) cfg.metadataRange = [Infinity,0];
             cfg.substacks.forEach( function(ss) {
                 if (parseFloat(ss.status) < cfg.metadataRange[0]) cfg.metadataRange[0] = parseFloat(ss.status);
@@ -126,7 +126,7 @@ var StackViewer = function(parameters) {
             self.objects.push(mesh);
 
         });
-        
+
         console.log(cfg.stackDimensions);
         roi.position.y = -((cfg.stackDimensions.hmax - cfg.stackDimensions.hmin) /2);
         roi.position.z = -(cfg.stackDimensions.lmin + ((cfg.stackDimensions.lmax - cfg.stackDimensions.lmin) /2));
@@ -266,19 +266,36 @@ var StackViewer = function(parameters) {
                 }
         })
     }
+    this.recolor = function(info_item) {
+        var info_range = [];
+        this.roi_rot.children[0].children.forEach( function(el, idx) {
+            info_range.push(el.info[info_item]);
+        })
+        info_range.sort();
+        var color_range_min = info_range[0];
+        var color_range_max = info_range[info_range.length - 1];
+        console.log(color_range_min, color_range_max);
+        var that = this;
+        this.roi_rot.children[0].children.forEach( function(el, idx) {
+            var fraction = ( parseFloat( el.info[info_item] ) - color_range_min)/ (color_range_max - color_range_min);
+            console.log(fraction);
+            color = that.colorScale(fraction).rgb();
+            console.log(color);
+            el.material.color.setRGB(color[0]/255, color[1]/255, color[2]/255);
+        });
+    }
 
     var substackPopupText = function(substack) {
         var htmlStr;
-        htmlStr = "<div style='font-weight:bold'>" + substack.name + "</div>" +
-            "<div>x: " + substack.info.x + "</div>" +
-            "<div>y: " + substack.info.y + "</div>" +
-            "<div>z: " + substack.info.z + "</div>" +
-            "<div>width: " + substack.info.width + "</div>" +
-            "<div>height: " + substack.info.height + "</div>" +
-            "<div>length: " + substack.info.length + "</div>";
-        if ('annotations' in substack.info) {
-            htmlStr += "<div>annotations: " + substack.info.annotations + "</div>";
-        }
+        htmlStr = "<div style='font-weight:bold'>" + substack.name + "</div>";
+        Object.keys(substack.info).sort().forEach( function (key) {
+            if ($.isNumeric(substack.info[key]) && (substack.info[key] % 1 !== 0)) {
+                htmlStr += "<div>" + key + ": " + substack.info[key].toFixed(2) + "</div>";
+            }
+            else {
+                htmlStr += "<div>" + key + ": " + substack.info[key] + "</div>";
+            }
+        });
         return htmlStr;
     }
 
@@ -327,7 +344,7 @@ var StackViewer = function(parameters) {
                         }
                     });
                 }
-            } 
+            }
             $(event.target).off('mouseup mousemove', handler);
         });
     };
@@ -416,4 +433,3 @@ var StackViewer = function(parameters) {
 };
 
 module.exports = StackViewer;
-
