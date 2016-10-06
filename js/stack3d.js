@@ -33,8 +33,10 @@ var StackViewer = function(parameters) {
         //Setup Variables
         var roi, ratio, light, lx, ly, lz, stackMaxDimension, colorScale, statusScale;
 
+        metadataRanges = {}
         if (!cfg.stackDimensions) {
             //cfg.stackDimensions = [0, 0, 0];
+
             cfg.stackDimensions = {
                 hmax: null,
                 hmin: null,
@@ -46,6 +48,18 @@ var StackViewer = function(parameters) {
 
             var ssx, ssy, ssz;
             cfg.substacks.forEach(function(ss) {
+                Object.keys(ss).sort().forEach( function (key) {
+                    if ($.isNumeric(ss[key])) {
+                        // push to array
+                        if (! (key in metadataRanges)){
+                            metadataRanges[key] = [];
+                        }
+                        metadataRanges[key].push(ss[key])
+                    }
+                    else {
+                        metadataRanges[key] = false;
+                    }
+                });
                 sswidth = ss.x + ss.width;
                 ssheight = ss.z + ss.height;
                 sslength = ss.y + ss.length;
@@ -62,6 +76,18 @@ var StackViewer = function(parameters) {
             });
         }
         stackMaxDimension = Math.max(cfg.stackDimensions.wmax, cfg.stackDimensions.lmax, cfg.stackDimensions.hmax);
+        metadataKeys = Object.keys(metadataRanges);
+        metadataKeys.forEach( function(item){
+            if (metadataRanges[item]) {
+                var range = metadataRanges[item];
+                range.sort(function(a, b){return a-b});
+                metadataRanges[item] = [range[0], range[range.length - 1]];
+            }
+            else {
+                delete metadataRanges[item];
+            }
+        });
+        this.metadataRanges = metadataRanges;
 
         this.objects = [];
         this.intersects = [];
@@ -127,7 +153,6 @@ var StackViewer = function(parameters) {
 
         });
 
-        console.log(cfg.stackDimensions);
         roi.position.y = -((cfg.stackDimensions.hmax - cfg.stackDimensions.hmin) /2);
         roi.position.z = -(cfg.stackDimensions.lmin + ((cfg.stackDimensions.lmax - cfg.stackDimensions.lmin) /2));
         roi.position.x = -(cfg.stackDimensions.wmin + ((cfg.stackDimensions.wmax - cfg.stackDimensions.wmin) /2));
@@ -207,6 +232,10 @@ var StackViewer = function(parameters) {
         self.renderer.render(self.scene, self.camera);
     };
 
+    this.getRanges = function() {
+        return this.metadataRanges;
+    }
+
     this.createSubstackPopup = function(substack) {
         var sdiv, htmlStr, leftOffset, offset, additionalTopOffset;
         sdiv = document.createElement('div');
@@ -272,10 +301,8 @@ var StackViewer = function(parameters) {
             info_range.push(el.info[info_item]);
         })
         info_range.sort(function(a, b){return a-b});
-        console.log(info_range);
         var color_range_min = info_range[0];
         var color_range_max = info_range[info_range.length - 1];
-        console.log(color_range_min, color_range_max);
         var that = this;
         this.roi_rot.children[0].children.forEach( function(el, idx) {
             var fraction = ( parseFloat( el.info[info_item] ) - color_range_min)/ (color_range_max - color_range_min);
@@ -285,7 +312,6 @@ var StackViewer = function(parameters) {
         var melement = createMetadataElement(this.colorScale, [color_range_min, color_range_max]);
         var mid = melement.id;
         $('#' + mid).html(melement.innerHTML);
-        console.log(melement);
     }
 
     var substackPopupText = function(substack) {
@@ -303,7 +329,6 @@ var StackViewer = function(parameters) {
     }
 
     var empty = function(el) {
-        console.log(el);
         while (el.lastChild) el.removeChild(el.lastChild);
     };
 
