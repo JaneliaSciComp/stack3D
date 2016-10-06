@@ -271,18 +271,21 @@ var StackViewer = function(parameters) {
         this.roi_rot.children[0].children.forEach( function(el, idx) {
             info_range.push(el.info[info_item]);
         })
-        info_range.sort();
+        info_range.sort(function(a, b){return a-b});
+        console.log(info_range);
         var color_range_min = info_range[0];
         var color_range_max = info_range[info_range.length - 1];
         console.log(color_range_min, color_range_max);
         var that = this;
         this.roi_rot.children[0].children.forEach( function(el, idx) {
             var fraction = ( parseFloat( el.info[info_item] ) - color_range_min)/ (color_range_max - color_range_min);
-            console.log(fraction);
             color = that.colorScale(fraction).rgb();
-            console.log(color);
             el.material.color.setRGB(color[0]/255, color[1]/255, color[2]/255);
         });
+        var melement = createMetadataElement(this.colorScale, [color_range_min, color_range_max]);
+        var mid = melement.id;
+        $('#' + mid).html(melement.innerHTML);
+        console.log(melement);
     }
 
     var substackPopupText = function(substack) {
@@ -365,7 +368,8 @@ var StackViewer = function(parameters) {
     }
 
     var createMetadataElement = function(scale, minmax) {
-        var metadiv, toinnerhtml, offset, offsetright, elType;
+        console.log(scale, minmax);
+        var metadiv, toinnerhtml, offset, offsetright, elType, elStyle;
         var myscale = scale || false;
 
         function convertToHexColor(i) {
@@ -398,17 +402,23 @@ var StackViewer = function(parameters) {
         metadiv.style.borderRadius = "5px";
         metadiv.style.padding = "2px";
         toinnerhtml = "";
-        if (cfg.metadataTop) elType = 'span';
-        else elType = "div"
+        if (cfg.metadataTop) {
+            elType = 'span';
+            elStyle = '';
+        }
+        else {
+            elType = "div";
+            elStyle = ' style="line-height:0;" ';
+        }
 
         if (cfg.colorInterpolate.length) {
             //create interpolate scheme
-            toinnerhtml += "<" + elType + ">" + parseFloat(minmax[0]).toFixed(1) + "<" + elType + ">";
+            toinnerhtml += "<" + elType + ">" + parseFloat(minmax[0]).toFixed(1) + "</" + elType + ">";
             for (var i = 0; i <= 10; i += 1) {
-                toinnerhtml += "<" + elType + "><span style='height:10px;width:20px;background:" + scale(i/10.0) +
+                toinnerhtml += "<" + elType + elStyle + "><span style='height:10px;width:20px;background:" + scale(i/10.0) +
                     ";display:inline-block;'></span></" + elType + ">";
             }
-            toinnerhtml += "<" + elType + ">" + parseFloat(minmax[1]).toFixed(1) + "<" + elType + ">";
+            toinnerhtml += "<" + elType + ">" + parseFloat(minmax[1]).toFixed(1) + "</" + elType + ">";
         }
         else {
             Object.keys(cfg.colors).forEach(function(m) {
@@ -417,7 +427,7 @@ var StackViewer = function(parameters) {
                 var css_color = three_color;
                 if (typeof three_color != 'string') css_color = convertToHexColor(three_color);
                 //do this via templates
-                toinnerhtml += "<" + elType + "><span style='margin-left: 5px;height:10px;width:10px;background:" + css_color +
+                toinnerhtml += "<" + elType + elStyle + "><span style='margin-left: 5px;height:10px;width:10px;background:" + css_color +
                     ";display:inline-block;'></span> : " + cfg.colors[m].name + "</" + elType + ">";
             });
         }
