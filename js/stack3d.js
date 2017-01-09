@@ -317,7 +317,7 @@ var StackViewer = function(parameters) {
     var substackPopupText = function(substack) {
         var htmlStr;
         htmlStr = "<div style='font-weight:bold'>" + substack.name + "</div>";
-        Object.keys(substack.info).sort().forEach( function (key) {
+        Object.keys(substack.info).forEach( function (key) {
             if ($.isNumeric(substack.info[key]) && (substack.info[key] % 1 !== 0)) {
                 htmlStr += "<div>" + key + ": " + substack.info[key].toFixed(2) + "</div>";
             }
