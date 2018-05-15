@@ -189,6 +189,21 @@ var StackViewer = function(parameters) {
         light = new THREE.DirectionalLight(0xffffff, 0.8);
         light.position.set(lx, ly, lz);
         this.scene.add(light);
+
+        lx = stackMaxDimension * Math.sin(5 * Math.PI / 8);                                          
+        lz = stackMaxDimension * Math.cos(5 * Math.PI / 8);                                          
+        ly = -ly; 
+        light = new THREE.DirectionalLight(0xffffff, 0.8);
+        light.position.set(lx, ly, lz);
+        this.scene.add(light);
+        
+        lx = stackMaxDimension * Math.sin(13 * Math.PI / 8);                                         
+        lz = stackMaxDimension * Math.cos(13 * Math.PI / 8);
+        ly = -ly;                                                                                    
+        light = new THREE.DirectionalLight(0xffffff, 0.8);                                           
+        light.position.set(lx, ly, lz);
+        this.scene.add(light);
+        
         light = new THREE.AmbientLight(0x404040); // soft white light
         this.scene.add(light);
 
